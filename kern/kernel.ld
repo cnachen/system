@@ -3,57 +3,46 @@ ENTRY( _entry )
 
 MEMORY
 {
-  ram   (wxa!ri) : ORIGIN = 0x80000000, LENGTH = 128M
+  RAM (rwx) : ORIGIN = 0x80000000, LENGTH = 128M
 }
 
 PHDRS
 {
   text PT_LOAD;
+  rodata PT_LOAD;
   data PT_LOAD;
   bss PT_LOAD;
 }
 
 SECTIONS
 {
+  . = ORIGIN(RAM);
+
   .text : {
-    *(.text.start);
-    PROVIDE(_text_start = .);
-    *(.text.init) *(.text .text.*)
-    PROVIDE(_text_end = .);
-  } >ram AT>ram :text
-
-  . = ALIGN(0x1000);
-  etext = .;
-
-  .sdata : {
-    _gp = . + 0x800;
-    *(.srodata.cst16) *(.srodata.cst8) *(.srodata.cst4) *(.srodata.cst2)
-    *(.srodata*)
-    *(.sdata .sdata.* .gnu.linkonce.s.*)
-  }
+    *(.text .text.*)
+    PROVIDE(etext = .);
+  } >RAM AT>RAM :text
 
   .rodata : {
-    PROVIDE(_rodata_start = .);
+    . = ALIGN(16);
+    *(.srodata .srodata.*)
+    . = ALIGN(16);
     *(.rodata .rodata.*)
-    PROVIDE(_rodata_end = .);
-  } >ram AT>ram :text
+  } >RAM AT>RAM :rodata
   
   .data : {
-    . = ALIGN(4096);
-    PROVIDE(_data_start = .);
-    *(.sdata .sdata.*) *(.data .data.*)
-    PROVIDE(_data_end = .);
-  } >ram AT>ram :data
+    . = ALIGN(16);
+    *(.sdata .sdata.*)
+    . = ALIGN(16);
+    *(.data .data.*)
+    PROVIDE(edata = .);
+  } >RAM AT>RAM :data
 
   .bss : {
-    PROVIDE(_bss_start = .);
-    *(.sbss .sbss.*) *(.bss .bss.*)
-    PROVIDE(_bss_end = .);
-  } >ram AT>ram :bss
-
-  PROVIDE(_memory_start = ORIGIN(ram));
-  PROVIDE(_memory_end = ORIGIN(ram) + LENGTH(ram));
-  . += 0x8000;
-  stack_top = .;
-  end = .;
+    . = ALIGN(16);
+    *(.sbss .sbss.*)
+    . = ALIGN(16);
+    *(.bss .bss.*)
+    PROVIDE(end = .);
+  } >RAM AT>RAM :bss
 }
