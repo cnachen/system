@@ -4,6 +4,7 @@ LD	= $(PREFIX)-ld
 OBJCOPY	= $(PREFIX)-objcopy
 QEMU	= qemu-system-riscv64
 RM	= rm
+MKDIR	= mkdir
 
 K	= kern
 U	= user
@@ -20,16 +21,19 @@ COBJ	= $(CSRC:$(K)/%.c=$(BUILD)/%.o)
 
 all: clean kernel.img
 
+build:
+	$(MKDIR) -p $(BUILD)
+
 kernel.img: kernel.elf
 	$(OBJCOPY) kernel.elf -I binary kernel.img
 
 kernel.elf: $(SOBJ) $(COBJ) $(K)/kernel.ld
 	$(LD) -T $(K)/kernel.ld -o kernel.elf $(SOBJ) $(COBJ)
 
-$(BUILD)/%.o: $(K)/%.c
+$(BUILD)/%.o: $(K)/%.c build
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD)/%.S.o: $(K)/%.S
+$(BUILD)/%.S.o: $(K)/%.S build
 	$(CC) $(SFLAGS) -c $< -o $@
 
 clean:
